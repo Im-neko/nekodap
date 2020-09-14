@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  ldap-server:
+    image: osixia/openldap:1.4.0
+    restart: always
+    env_file: .env
+    environment:
+      LDAP_ORGANISATION: "$LDAP_ORGANISATION"
+      LDAP_DOMAIN: "$LDAP_DOMAIN"
+      LDAP_ADMIN_PASSWORD: "$LDAP_PASS"
+    ports:
+      - "389:389"
+      - "636:636"
+    networks:
+      - default
+      - docker-net
+    volumes:
+      - ldap-data:/var/lib/ldap
+      - ldap-data:/etc/ldap/slapd.d
+
+  ldap-web:
+    image: osixia/phpldapadmin:0.9.0
+    restart: always
+    environment:
+      PHPLDAPADMIN_LDAP_HOSTS: "ldap-server"
+      PHPLDAPADMIN_HTTPS: "false"
+    ports:
+      - "18081:80"
+    links:
+      - ldap-server
+    networks:
+      - default
+      - docker-net
+
+volumes:
+  ldap-data:
+    driver: local
+
+networks:
+  docker-net:
+    external: true
